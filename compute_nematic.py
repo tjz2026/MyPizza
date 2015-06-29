@@ -28,7 +28,7 @@ import numpy as NP
 
 
 
-def cmp_nematic(XYZ):
+def cmp_nematic(XYZ, chain_num):
   n = flag = 0
   while 1:
     which,time,flag = XYZ.data.iterator(flag)
@@ -38,18 +38,38 @@ def cmp_nematic(XYZ):
     atom_sorted = sorted(atoms)
     print atom_sorted[0]
     #atom_sorted = sorted(atoms,key=lambda x: (x[0], -x[1]))
-    atom_array=NP.array(atoms) 
+    atom_array=NP.array(atom_sorted) 
     print "atom shape is", atom_array.shape 
     print "atom dim %s" % atom_array.ndim
+    atom_num=int(atom_array.shape[0]) 
+    print "total atom number =%s" % atom_num
+    atom_pos=NP.zeros( (atom_num,4) )
+    atom_pos[:,0]=atom_array[:,0]   
+    atom_pos[:,1]=atom_array[:,2]   
+    atom_pos[:,2]=atom_array[:,3]   
+    atom_pos[:,3]=atom_array[:,4]   
     #ids=atoms[:,1]
     #ordering = NP.argsort(ids)
     #print ids
-    #print ordering
-
-    for atom in atom_sorted:
-      itype = int(atom[0])
-      print itype,atom[2],atom[3],atom[4]
-    
+#   the Ith bond is defined as the displacement of atom[I+1]-atom[I]
+    bond_vec=NP.array([0.,0.,0.])
+    n_bond=0
+    s1=0.0
+    for atom in atom_pos:
+      atom_id = int(atom[0])
+      print atom_id,atom[1],atom[2],atom[3]
+      if atom_id%chain_num == 0:
+        pass
+      else:
+        bond_vec[0]=atom_pos[atom_id][1]-atom_pos[atom_id-1][1]
+        bond_vec[1]=atom_pos[atom_id][2]-atom_pos[atom_id-1][2]
+        bond_vec[2]=atom_pos[atom_id][3]-atom_pos[atom_id-1][3]
+        bond_vec=bond_vec/NP.linalg.norm(bond_vec) 
+        s1=s1+bond_vec[2]
+        n_bond=n_bond+1
+    s1=s1/n_bond 
+    print "total amount of bond=%s" % n_bond
+    print "ava of s1=%s" % s1
     print time,
     n += 1
     
@@ -73,7 +93,7 @@ d = dump(dumpfile)
 d.map(nid,"id",ntype,"type",nx,"x",ny,"y",nz,"z")
 x = xyz(d)
 x.one(xyzfile)
-cmp_nematic(x)
+cmp_nematic(x,30)
 
 
 # --------------------------------------------------------------------
